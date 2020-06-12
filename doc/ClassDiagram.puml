@@ -1,0 +1,246 @@
+@startuml
+
+class ParticleTrackerManager
+{
+    CreateAndUpdateTrackerBasedOnPoissonDisk()
+    UpdateTrackersAndTangeant()
+    AdvectSingleTrackers()
+    AdvectTrackersAndTangeants()
+    ComputeDivergence()
+    ComputeDensity()
+    DeleteTracker()
+
+    GetNumberOfPatches()
+
+    tackerPolygon = false;
+    int numberOfPatches;
+    int numberOfConcealedPatches;
+    int numberOfNewPatches;
+    int numberOfDetachedPatches;
+    int maxId = 0;
+    const char*    randomThresholdDistortion = "t_rand";
+    float epsilon = 0.0001;
+
+    GA_RWHandleV3   attN;
+    GA_RWHandleV3   attV;
+    GA_RWHandleV3   attCenterUV;
+    GA_RWHandleI    attId;
+    GA_RWHandleF    attLife;
+    GA_RWHandleI    attSpawn;
+    GA_RWHandleI    attActive;
+    GA_RWHandleI    attIsMature;
+    GA_RWHandleI    attDensity;
+    GA_RWHandleF    attBlend;
+    GA_RWHandleF    attRandT;
+    GA_RWHandleF    attMaxDeltaOnD;
+    GA_RWHandleI    attDeleteFaster;
+    GA_RWHandleV3   refAttV;
+    GA_RWHandleV3   refAttN;
+    GA_RWHandleV3   tangeant;
+    GA_RWHandleI    attFadeIn;
+    GA_RWHandleF    temporalComponentKt;
+    GA_RWHandleV3 AttCd;
+
+    GA_RWHandleV3 attVSurface;
+    GA_RWHandleF attDivergence;
+}
+
+class ParticleAndTrackerManagerGagnon2016
+{
+    ParticleAndTrackerManagerGagnon2016(surfaceGdp, trackersGdp);
+    InitializeTrackersAndTangeants(surface, trackers, surfaceGroup, params);
+    CreateAndUpdateTrackersBasedOnPoissonDisk(surface, trackers, surfaceGroup, params);
+    UpdateTrackersAndTangeant(surface,trackers, surfaceGroup, params);
+    AdvectSingleTrackers(surfaceGdp, trackers,  params);
+    AdvectTrackersAndTangeants(surfaceGdp, trackers,  params);
+    ComputeDivergence(surfaceGdp, trackers,  params,  &tree);
+    ComputeDensity(surfaceGdp,trackers,  params,  &tree);
+    DeleteTracker(trackers,int trackerId);
+
+    int GetNumberOfPatches()
+
+    const string markerGroupName = "markers";
+    const string surfaceGroupName = "surface";
+    const string approachName   = "[Particle Tracker]";
+
+    double  markerAdvectionTime;
+
+    tackerPolygon = false;
+    int numberOfPatches;
+    int numberOfConcealedPatches;
+    int numberOfNewPatches;
+    int numberOfDetachedPatches;
+    int maxId = 0;
+    const char*    randomThresholdDistortion = "t_rand";
+    float epsilon = 0.0001;
+
+    GA_RWHandleV3   attN;
+    GA_RWHandleV3   attV;
+    GA_RWHandleV3   attCenterUV;
+    GA_RWHandleI    attId;
+    GA_RWHandleF    attLife;
+    GA_RWHandleI    attSpawn;
+    GA_RWHandleI    attActive;
+    GA_RWHandleI    attIsMature;
+    GA_RWHandleI    attDensity;
+    GA_RWHandleF    attBlend;
+    GA_RWHandleF    attRandT;
+    GA_RWHandleF    attMaxDeltaOnD;
+    GA_RWHandleI    attDeleteFaster;
+    GA_RWHandleV3   refAttV;
+    GA_RWHandleV3   refAttN;
+    GA_RWHandleV3   tangeant;
+    GA_RWHandleI    attFadeIn;
+    GA_RWHandleI    isTangeantTracker;
+    GA_RWHandleF    temporalComponentKt;
+    GA_RWHandleV3 AttCd;
+
+    GA_RWHandleV3 attVSurface;
+    GA_RWHandleF attDivergence;
+}
+
+class LappedSurfaceGagnon2016
+{
+
+    LappedSurfaceGagnon2016(surface, trackersGdp);
+    ~LappedSurfaceGagnon2016();
+
+    PoissonDiskSampling(surfaceGdp, trackers, ParametersDeformablePatches params);
+    AddSolidPatchesUsingBarycentricCoordinates( surface, trackersGdp, params,  &surfaceTree);
+    ShufflePoints(trackers);
+    OrthogonalUVProjection( surface, trackersGdp, params);
+    DeleteUnusedPatches(gdp, trackersGdp, params);
+    FillSurfaceHoles(surfaceGdp, trackers, params);
+    CreateAPatch(trackers, params);
+
+    double poissondisk;
+    double  patchCreationTime;
+    double  updatePatchesTime;
+    double orthogonalUVProjectionTime;
+    const string approachName   = "[DynamicLappedTexture]";
+    const string uvArrayName = "uvs";
+    const string alphaArrayName = "alphas";
+    const string patchIdsName = "patchIds";
+    int numberOfPatcheCreated=0;
+
+    GA_Attribute        *uvsAtt;
+    const GA_AIFNumericArray *uvsArray;
+
+    GA_Attribute        *patchIdsArrayAttrib;
+    const GA_AIFNumericArray *patchIdsAtt;
+
+    GA_Attribute        *alphaArrayAtt;
+    const GA_AIFNumericArray *alphaAtt;
+
+    map<string,GU_RayIntersect*> rays;
+
+}
+
+class DeformableGridsManager
+{
+    DeformableGridsManager(surfaceGdp, trackersGdp);
+
+    CreateGridBasedOnMesh(gdp,surfaceGdp, trackersGdp, params,trackers,  &tree);
+    AdvectGrids(gdp, trackersGdp, params, &tree, surfaceGdp);
+
+    ConnectivityTest(const gdp,GA_Offset point, grp, &pointsAround,&group);
+
+    UVFlattening(GU_Detail &tempGdp, trackersGdp, deformableGridsGdp,
+                      tracker, GA_Offset closestPoint,
+                      , tempPointGroup,
+                      &pointsAround,
+                      float scaling,
+                       params);
+    FlagBoundaries(deformableGridsGdp);
+
+    const string gridGroupName = "grids";
+
+    double  uvFlatteningTime;
+    int     nbOfFlattenedPatch;
+    double  gridMeshCreation;
+    double  gridAdvectionTime;
+    const string approachName   = "[Deformable Grids]";
+
+    const string uvArrayName = "uvs";
+    const string alphaArrayName = "alphas";
+    const string patchIdsName = "patchIds";
+
+    const char*    alpha0Name      = "alpha0";
+    const char*    distortionWeightName  = "w";
+    const char*    vertexWeightName  = "vw";
+    const char*    distortionWeight0Name  = "w0";
+    const char*    disrortionMinThreshold = "t_min";
+    const char*    distortionMaxThreshold = "t_max";
+    const char*    initialVertexAngle = "v_a0";
+    const char*    uvName = "uvw";
+
+    const string triangleArrayName = "triangleRef";
+    GA_Attribute        *triangleRefAtt;
+    const GA_AIFNumericArray *triangleArray;
+
+    vector<set<map<GA_Offset, UT_Vector3> > > uvs;
+    map<int,UT_Vector3> gridCenterPosition;
+    useUvFlattening = true;
+}
+
+class PatchedSurface
+{
+    PatchedSurface(surface, trackersGdp);
+    ~PatchedSurface();
+
+    PoissonDiskSampling(surfaceGdp, trackers, params);
+    AddDeformablePatchesUsingBarycentricCoordinates(gdp, surface, trackersGdp, params, surfaceTree, ray);
+    DeleteUnusedPatches(gdp, trackersGdp, params);
+
+    //for test purpose
+    CreateAPatch(trackers, params);
+
+    double poissondisk;
+    double  patchCreationTime;
+    double  updatePatchesTime;
+    const string approachName   = "[Yu 2011 extention]";
+
+    GA_Attribute        *uvsAtt;
+    const GA_AIFNumericArray *uvsArray;
+    GA_Attribute        *patchIdsArrayAttrib;
+    const GA_AIFNumericArray *patchIdsAtt;
+    GA_Attribute        *alphaArrayAtt;
+    const GA_AIFNumericArray *alphaAtt;
+    map<string,GU_RayIntersect*> rays;
+
+}
+
+class Bridson2012PoissonDiskDistribution
+{
+
+    ~Bridson2012PoissonDiskDistribution()
+    PoissonDiskSampling( trackersGdp, tree, levelSet, diskRadius, angleNormalThreshold,  params);
+    SetNumberOfPoint(data)
+    initializeGrid(tree, trackerGdp, float diskRadius, angleNormalThreshold);
+    CreateAPointDisk( trackersGdp, position, N);
+    CreateAParticle(trackerGdp, tree, newPointPosition, newPointNormal,  killDistance, numberOfClosePoint, params);
+    SetMaxId(long data)
+
+    projectPointOnLevelSet(point, float distance, grad );
+    RespectCriterion( trackers, tree,newPointPosition, newPointNormal,  killDistance, numberOfClosePoint, exclude , params);
+
+    float poissonDiskRadius;
+    int k;
+    int numberOfPoints;
+    int n = 3;
+    int t;
+    float cellSize;
+    Circle = true;
+    long maxId = 0;
+}
+
+
+LappedSurfaceGagnon2016 --|> ParticleAndTrackerManagerGagnon2016
+LappedSurfaceGagnon2016 --> Bridson2012PoissonDiskDistribution
+PatchedSurface --> Bridson2012PoissonDiskDistribution
+PatchedSurface --|> DeformableGridsManager
+DeformableGridsManager --|> ParticleTrackerManager
+
+
+
+@enduml
