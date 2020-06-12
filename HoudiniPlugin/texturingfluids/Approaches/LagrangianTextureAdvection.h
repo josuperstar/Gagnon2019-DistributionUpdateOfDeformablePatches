@@ -7,7 +7,6 @@
 #include <GEO/GEO_PrimPart.h>
 #include <Math/Vec3.h>
 #include "Images/Image.h"
-#include "Set/SpatialGrid.h"
 #include <GU/GU_Flatten.h>
 #include <Strategies/StrategyPatchSurfaceSynthesis.h>
 
