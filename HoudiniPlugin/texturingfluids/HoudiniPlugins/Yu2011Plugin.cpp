@@ -213,7 +213,7 @@ LagrangianTextureAdvectionPlugin::cookMySop(OP_Context &context)
 
 
 
-    string baseVariable = "REZ_YU2011LAGRANGIANTEXTUREADVECTION_BASE";
+    string baseVariable = "REZ_GAGNON2019_DISTRIBUTION_UPDATE_DEFORMABLE_PATCHES_BASE";
     char* pPath;
     pPath = getenv (baseVariable.c_str());
     if (pPath!=NULL)
@@ -250,7 +250,7 @@ LagrangianTextureAdvectionPlugin::cookMySop(OP_Context &context)
     params.useDynamicTau = UseDynamicFading();
     if (params.useDynamicTau)
     {
-        cout << "======================== GAGNON 2019, frame  "<<frame<< "============================="<<endl;
+        cout << "======================== Gagnon2019DistributionUpdateOfDeformablePatches, frame  "<<frame<< "============================="<<endl;
     }
     else
     {

@@ -176,9 +176,9 @@ AtlasYu2011Plugin::cookMySop(OP_Context &context)
     int frame = context.getFrame();
     //int numberOfGaussianLevel = 2;
 
-    cout << "======================== Yu2011 Atlas ============================="<<endl;
+    cout << "======================== Gagnon2019DistributionUpdateOfDeformablePatches Atlas ============================="<<endl;
 
-    string baseVariable = "REZ_YU2011LAGRANGIANTEXTUREADVECTION_BASE";
+    string baseVariable = "REZ_GAGNON2019_DISTRIBUTION_UPDATE_DEFORMABLE_PATCHES_BASE";
     char* pPath;
     pPath = getenv (baseVariable.c_str());
     if (pPath!=NULL)
