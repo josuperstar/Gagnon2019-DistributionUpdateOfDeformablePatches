@@ -24,6 +24,8 @@ public:
 
     void AdvectGrids(GU_Detail *gdp, GU_Detail *trackersGdp, ParametersDeformablePatches params, GEO_PointTreeGAOffset &tree, GU_Detail *surfaceGdp);
 
+    void TestGridsBlendingKernelCoverage(GU_Detail *surfaceGdp, GU_Detail *deformableGridsGdp, GU_Detail *trackersGdp, ParametersDeformablePatches params, GEO_PointTreeGAOffset &surfaceTree, GU_RayIntersect &ray);
+
     void ConnectivityTest(const GU_Detail *gdp,GA_Offset point, GA_PointGroup *grp, set<GA_Offset> &pointsAround,set<GA_Offset> &group);
 
     bool UVFlattening(GU_Detail &tempGdp, GU_Detail *trackersGdp, GU_Detail *deformableGridsGdp,
@@ -71,7 +73,8 @@ protected :
     map<int,UT_Vector3> gridCenterPosition;
     bool useUvFlattening = true;
 
-
+private:
+    set<GA_Offset> GetNeighborPoint(UT_Vector3 posiiton, float radius, GEO_PointTreeGAOffset &surfaceTree);
 
 };
 

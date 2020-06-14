@@ -24,7 +24,7 @@
 #include <GU/GU_NeighbourList.h>
 #include <GU/GU_RayIntersect.h>
 #include <GU/GU_Flatten.h>
-
+#include <Core/Gagnon2019/Bridson2012PoissonDiskDistribution.h>
 #include <Core/HoudiniUtils.h>
 
 
@@ -598,7 +598,7 @@ void DeformableGridsManagerGagnon2019::CreateGridsBasedOnMesh(GU_Detail *deforma
 
 //================================================================================================
 
-//                                      ADVECT MARKERS
+//                                      ADVECT GRIDS
 
 //================================================================================================
 
@@ -933,6 +933,119 @@ void DeformableGridsManagerGagnon2019::AdvectGrids(GU_Detail *deformableGridsgdp
     cout << "Ok"<<endl;
 
     this->gridAdvectionTime += (std::clock() - startAdvection) / (double) CLOCKS_PER_SEC;
+}
+
+//================================================================================================
+
+//                                      TEST BLENDING KERNEL COVERAGE
+
+//================================================================================================
+
+
+void DeformableGridsManagerGagnon2019::TestGridsBlendingKernelCoverage(GU_Detail *surfaceGdp, GU_Detail *deformableGridsGdp, GU_Detail *trackersGdp, ParametersDeformablePatches params, GEO_PointTreeGAOffset &surfaceTree, GU_RayIntersect &ray)
+{
+
+    //Sloppy test to check if the blending kernel is covered by the grid
+    //For each point of the surface in the blending kernel region, we check if we have a close point from the deformable grid
+    //The distance that we check if r/5
+    //According to our test, it is working.
+    //However, a test where we check if the point is inside a primivite from the grid would be more accurate
+    //TODO: find the proper function in the HDK to test if a point is inside a primitive.
+    //For now, I only found intersection between a ray and a primitive...
+    //For each trackers
+    //  for each polygon on the surface
+    //      check if we have on deformable grid's primitive
+
+
+    GA_GroupType primitiveGroupType = GA_GROUP_PRIMITIVE;
+    const GA_GroupTable *primitiveGTable = deformableGridsGdp->getGroupTable(primitiveGroupType);
+
+    GA_GroupType groupType = GA_GROUP_POINT;
+    const GA_GroupTable *gtable = deformableGridsGdp->getGroupTable(groupType);
+
+    float r = params.poissondiskradius;
+    float cs = params.CellSize;
+    float kd = r/2;
+    GA_Offset trackerPpt;
+    GA_FOR_ALL_PTOFF(trackersGdp,trackerPpt)
+    {
+        int id = attId.get(trackerPpt);
+
+        if (params.testPatch == 1 && params.patchNumber != id)
+            continue;
+
+        int active = attActive.get(trackerPpt);
+        if (active == 0)
+            continue;
+
+        UT_Vector3 trackerPosition = trackersGdp->getPos3(trackerPpt);
+        UT_Vector3 trackerN = attN.get(trackerPpt);
+
+        string str = std::to_string(id);
+        string groupName = "grid"+str;
+        GA_PointGroup* pointGrp = (GA_PointGroup*)gtable->find(groupName.c_str());
+
+        //--------------------------------------
+        //For each surface point in kernel radius
+        //getting neigborhood
+        set<GA_Offset> neighborhood = GetNeighborPoint(trackerPosition, r, surfaceTree);
+        GA_PrimitiveGroup*  gridPrimitiveGroup  = (GA_PrimitiveGroup*)primitiveGTable->find(groupName);
+        if (gridPrimitiveGroup == 0x0)
+            continue;
+
+        set<GA_Offset>::iterator itG;
+
+        for(itG = neighborhood.begin(); itG != neighborhood.end(); ++itG)
+        {
+            bool isCovered = false;
+            UT_Vector3 gridPointPosition = deformableGridsGdp->getPos3(*itG);
+
+
+            bool outsideOfSmallEllipse = false;
+            bool insideBigEllipse = false;
+
+            Bridson2012PoissonDiskDistributionGagnon2019::IsInsideBlendingKernel(gridPointPosition, trackerPosition, trackerN,r,cs, kd, outsideOfSmallEllipse, insideBigEllipse );
+
+            if (!insideBigEllipse)
+                continue;
+            GA_Offset ppt;
+            GA_FOR_ALL_GROUP_PTOFF(deformableGridsGdp, pointGrp,ppt)
+            {
+                UT_Vector3 surfacePointPosition = deformableGridsGdp->getPos3(ppt);
+                float distance = distance3d(surfacePointPosition, gridPointPosition);
+                if (distance < r/5)
+                    isCovered = true;
+            }
+            if (!isCovered)
+            {
+                cout << "Patch "<<id<< " is not covered"<<endl;
+                attActive.set(trackerPpt, 0);
+                this->attStatus.set(trackerPpt,2);
+                break;
+            }
+        }
+        //---------------------------------------
+    }
+}
+
+set<GA_Offset> DeformableGridsManagerGagnon2019::GetNeighborPoint(UT_Vector3 position, float radius, GEO_PointTreeGAOffset &surfaceTree)
+{
+    // Close particles indices
+    GEO_PointTreeGAOffset::IdxArrayType surfaceNeighborhoodVertices;
+    surfaceTree.findAllCloseIdx(position,
+                         radius*2,
+                         surfaceNeighborhoodVertices);
+
+    unsigned close_particles_count = surfaceNeighborhoodVertices.entries();
+
+    set<GA_Offset> neighborhood;
+    for(int j=0; j<close_particles_count;j++ )
+    {
+        GA_Offset surfacePointOffset = surfaceNeighborhoodVertices.array()[j];
+        neighborhood.insert(surfacePointOffset);
+    }
+
+    return neighborhood;
 }
 
 //================================================================================================

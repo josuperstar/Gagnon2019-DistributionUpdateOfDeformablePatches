@@ -47,6 +47,12 @@ public:
     void SetMaxId(long data){maxId = data;}
     int numberOfNewPoints;
 
+    static void IsInsideBlendingKernel(UT_Vector3 patchCenter, UT_Vector3 pointToTest, UT_Vector3 N,
+                                float r,
+                                float cs,
+                                float kd,
+                                bool &outsideOfSmallEllipse, bool &insideBigEllipse);
+
 private:
 
     openvdb::Vec3f projectPointOnLevelSet(openvdb::Vec3f point, float distance, openvdb::Vec3f grad );

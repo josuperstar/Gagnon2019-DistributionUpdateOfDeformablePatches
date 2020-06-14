@@ -68,45 +68,32 @@ void LagrangianTextureAdvection::Synthesis(GU_Detail *gdp, GU_Detail *surfaceGdp
     //=========================== CORE ALGORITHM ============================
 
 
-    //---- for visualisation purpose
-
-    //string beforeUpdateString = params.trackersFilename + "beforeAdvection.bgeo";
-    //const char* filename = beforeUpdateString.c_str();//"dlttest.bgeo";
-    //trackersGdp->save(filename,options,errors);
-    //----------------------------------
-
-
-    bool usingOnlyPoissonDisk = false;
 
 
     if(params.startFrame == params.frame)
     {
         surface.PoissonDiskSampling(levelSet,trackersGdp,params);
         surface.CreateAndUpdateTrackersBasedOnPoissonDisk(surfaceGdp,trackersGdp, surfaceGroup,params);
-        if (!usingOnlyPoissonDisk)
-            surface.CreateGridsBasedOnMesh(gdp,surfaceLowResGdp,trackersGdp, params,newPatchesPoints,surfaceLowResTree);
+        surface.CreateGridsBasedOnMesh(gdp,surfaceLowResGdp,trackersGdp, params,newPatchesPoints,surfaceLowResTree);
     }
     else
     {
         surface.AdvectSingleTrackers(surfaceLowResGdp,trackersGdp, params);
-        if (!usingOnlyPoissonDisk)
-            surface.AdvectGrids(gdp,trackersGdp,params,surfaceLowResTree,surfaceLowResGdp);
+        surface.AdvectGrids(gdp,trackersGdp,params,surfaceLowResTree,surfaceLowResGdp);
+        surface.TestGridsBlendingKernelCoverage(surfaceGdp, gdp, trackersGdp,params, surfaceTree, ray);
         if (params.updateDistribution)
         {
             surface.PoissonDiskSampling(levelSet,trackersGdp,params); //Poisson disk on the level set
-            //surface.CreateAndUpdateTrackersBasedOnPoissonDisk(surfaceGdp,trackersGdp, surfaceGroup,params);
         }
         surface.CreateAndUpdateTrackersBasedOnPoissonDisk(surfaceGdp,trackersGdp, surfaceGroup,params);
-        if (!usingOnlyPoissonDisk)
-            surface.CreateGridsBasedOnMesh(gdp,surfaceLowResGdp,trackersGdp, params,newPatchesPoints,surfaceLowResTree);
+        surface.CreateGridsBasedOnMesh(gdp,surfaceLowResGdp,trackersGdp, params,newPatchesPoints,surfaceLowResTree);
         surface.DeleteUnusedPatches(gdp, trackersGdp,params);
 
     }
-    if (!usingOnlyPoissonDisk)
-    {
-        //For the blending computation, we create uv array per vertex that we called patch
-        surface.AddDeformablePatchesUsingBarycentricCoordinates(gdp, surfaceGdp,trackersGdp, params,surfaceTree,ray);
-    }
+
+    //For the blending computation, we create uv array per vertex that we called patch
+    surface.AddDeformablePatchesUsingBarycentricCoordinates(gdp, surfaceGdp,trackersGdp, params,surfaceTree,ray);
+
 
     //=======================================================================
 

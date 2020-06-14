@@ -74,6 +74,7 @@ protected :
     GA_RWHandleF    temporalComponentKt;
     GA_RWHandleV3   AttCd;
     GA_RWHandleI    attNumberOfPrimitives;
+    GA_RWHandleI    attStatus;
 
     GA_RWHandleV3 attVSurface;
     //GA_RWHandleV3 attNSurface;

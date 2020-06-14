@@ -71,7 +71,7 @@ ParticleTrackerManagerGagnon2019::ParticleTrackerManagerGagnon2019(GU_Detail *su
 
     this->attVSurface = GA_RWHandleV3(surfaceGdp->addFloatTuple(GA_ATTRIB_POINT,"v", 3));
     this->attDivergence = GA_RWHandleF(trackersGdp->addFloatTuple(GA_ATTRIB_POINT,"divergence",1));
-
+    this->attStatus  = GA_RWHandleI(trackersGdp->addIntTuple(GA_ATTRIB_POINT,"status",1));
 
     this->numberOfInitialPatches = 0;
 

@@ -407,6 +407,56 @@ void Bridson2012PoissonDiskDistributionGagnon2019::CreateAPointDisk(GU_Detail* t
 
 }
 
+
+void Bridson2012PoissonDiskDistributionGagnon2019::IsInsideBlendingKernel(UT_Vector3 patchCenter, UT_Vector3 pointToTest,
+                                                                          UT_Vector3 N,
+                                                                          float r,
+                                                                          float cs,
+                                                                          float kd,
+                                                                          bool &outsideOfSmallEllipse, bool &insideBigEllipse)
+{
+
+    UT_Vector3 defaultDirection(1.012f,0.123f,0.002f);
+    UT_Vector3 S,T;
+
+    N.normalize();
+    S = cross(N,defaultDirection);
+    S.normalize();
+    T = cross(S,N);
+    T.normalize();
+
+
+    // Transform into local patch space (where STN is aligned with XYZ at the origin)
+    const UT_Vector3 relativePosistion = pointToTest - patchCenter;
+    UT_Vector3 poissonDiskSpace;
+    poissonDiskSpace.x() = relativePosistion.dot(S);
+    poissonDiskSpace.y() = relativePosistion.dot(T);
+    poissonDiskSpace.z() = relativePosistion.dot(N);
+
+
+    //(x/a)2 + (y/b)2 + (z/c)2 = 1
+    float x = poissonDiskSpace.x();
+    float y = poissonDiskSpace.y();
+    float z = poissonDiskSpace.z();
+    float a = r;
+    float b = r;
+    float c = cs*2;
+
+    float a2 = kd;
+    float b2 = kd;
+    float c2 = cs;
+
+    float smallEllipse = (x/a2)*(x/a2) + (y/b2)*(y/b2) + (z/c2)*(z/c2);
+    float bigEllipse = (x/a)*(x/a) + (y/b)*(y/b) + (z/c)*(z/c);
+
+    if (bigEllipse <= 1)
+        insideBigEllipse = true;
+    if (smallEllipse > 1)
+        outsideOfSmallEllipse = true;
+
+}
+
+
 //================================================================================================
 
 //                                      RESPECT CRITERION
@@ -436,8 +486,7 @@ bool Bridson2012PoissonDiskDistributionGagnon2019::RespectCriterion(GU_Detail* t
     newPointNormal.normalize();
     float kd = killDistance;
 
-    UT_Vector3 defaultDirection(1.012f,0.123f,0.002f);
-    UT_Vector3 S,T;
+
 
     for(int j=0; j<l;j++)
     {
@@ -450,45 +499,14 @@ bool Bridson2012PoissonDiskDistributionGagnon2019::RespectCriterion(GU_Detail* t
         UT_Vector3 pos          = trackersGdp->getPos3(neighbor);
 
         UT_Vector3 N            = attN.get(neighbor);
-        N.normalize();
-        S = cross(N,defaultDirection);
-        S.normalize();
-        T = cross(S,N);
-        T.normalize();
-
-
-        // Transform into local patch space (where STN is aligned with XYZ at the origin)
-        const UT_Vector3 relativePosistion = pos - newPointPosition;
-        UT_Vector3 poissonDiskSpace;
-        poissonDiskSpace.x() = relativePosistion.dot(S);
-        poissonDiskSpace.y() = relativePosistion.dot(T);
-        poissonDiskSpace.z() = relativePosistion.dot(N);
 
         float dotN              = dot(N,newPointNormal);
         bool samePlane          = dotN > params.poissonAngleNormalThreshold;
-
-        //(x/a)2 + (y/b)2 + (z/c)2 = 1
-        float x = poissonDiskSpace.x();
-        float y = poissonDiskSpace.y();
-        float z = poissonDiskSpace.z();
-        float a = r;
-        float b = r;
-        float c = cs*2;
-
-        float a2 = kd;
-        float b2 = kd;
-        float c2 = cs;
-
-        float smallEllipse = (x/a2)*(x/a2) + (y/b2)*(y/b2) + (z/c2)*(z/c2);
-        float bigEllipse = (x/a)*(x/a) + (y/b)*(y/b) + (z/c)*(z/c);
-
         bool outsideOfSmallEllipse = false;
         bool insideBigEllipse = false;
 
-        if (bigEllipse <= 1)
-            insideBigEllipse = true;
-        if (smallEllipse > 1)
-            outsideOfSmallEllipse = true;
+        IsInsideBlendingKernel(newPointPosition, pos, N, r, cs, kd, outsideOfSmallEllipse,insideBigEllipse);
+
 
         //It is too close to the current point ?
         if(samePlane && !outsideOfSmallEllipse)
