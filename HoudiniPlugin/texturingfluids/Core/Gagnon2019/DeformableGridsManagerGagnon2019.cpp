@@ -993,28 +993,49 @@ void DeformableGridsManagerGagnon2019::TestGridsBlendingKernelCoverage(GU_Detail
         if (gridPrimitiveGroup == 0x0)
             continue;
 
+        ray.init(deformableGridsGdp,gridPrimitiveGroup);
         set<GA_Offset>::iterator itG;
 
         for(itG = neighborhood.begin(); itG != neighborhood.end(); ++itG)
         {
             bool isCovered = false;
-            UT_Vector3 gridPointPosition = deformableGridsGdp->getPos3(*itG);
+            UT_Vector3 surfacePointPosition = deformableGridsGdp->getPos3(*itG);
 
 
             bool outsideOfSmallEllipse = false;
             bool insideBigEllipse = false;
 
-            Bridson2012PoissonDiskDistributionGagnon2019::IsInsideBlendingKernel(gridPointPosition, trackerPosition, trackerN,r,cs, kd, outsideOfSmallEllipse, insideBigEllipse );
+            Bridson2012PoissonDiskDistributionGagnon2019::IsInsideBlendingKernel(surfacePointPosition, trackerPosition, trackerN,r,cs, kd, outsideOfSmallEllipse, insideBigEllipse );
 
             if (!insideBigEllipse)
                 continue;
+
+
+            /*
             GA_Offset ppt;
             GA_FOR_ALL_GROUP_PTOFF(deformableGridsGdp, pointGrp,ppt)
             {
                 UT_Vector3 surfacePointPosition = deformableGridsGdp->getPos3(ppt);
                 float distance = distance3d(surfacePointPosition, gridPointPosition);
-                if (distance < r/5)
+                if (distance < r/3)
                     isCovered = true;
+            }
+            */
+            GU_MinInfo mininfo;
+            mininfo.init(params.maximumProjectionDistance,0.0001);
+            ray.minimumPoint(surfacePointPosition,mininfo);
+            if (mininfo.prim == 0x0)
+            {
+                cout << "Can't find minimum distance's primitive for patch"<<id<<endl;
+                isCovered = false;
+            }
+            //get pos of hit
+            UT_Vector4 hitPos;
+            mininfo.prim->evaluateInteriorPoint(hitPos,mininfo.u1,mininfo.v1);
+            float dist = distance3d(surfacePointPosition,hitPos);
+            if (dist < r/10)
+            {
+                isCovered = true;
             }
             if (!isCovered)
             {
