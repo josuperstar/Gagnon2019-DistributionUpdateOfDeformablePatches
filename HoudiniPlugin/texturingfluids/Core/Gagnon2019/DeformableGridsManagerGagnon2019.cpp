@@ -957,6 +957,8 @@ void DeformableGridsManagerGagnon2019::TestGridsBlendingKernelCoverage(GU_Detail
     //      check if we have on deformable grid's primitive
 
 
+    GA_RWHandleV3 attNSurface(surfaceGdp->findFloatTuple(GA_ATTRIB_POINT,"N", 3));
+
     GA_GroupType primitiveGroupType = GA_GROUP_PRIMITIVE;
     const GA_GroupTable *primitiveGTable = deformableGridsGdp->getGroupTable(primitiveGroupType);
 
@@ -1005,22 +1007,17 @@ void DeformableGridsManagerGagnon2019::TestGridsBlendingKernelCoverage(GU_Detail
             bool outsideOfSmallEllipse = false;
             bool insideBigEllipse = false;
 
+            //check if it is on the same plane:
+            UT_Vector3 surfaceNormal = attNSurface.get(*itG);
+            float plane = dot(surfaceNormal,trackerN);
+            if (plane < 0.5)
+                continue;
+
             Bridson2012PoissonDiskDistributionGagnon2019::IsInsideBlendingKernel(surfacePointPosition, trackerPosition, trackerN,r,cs, kd, outsideOfSmallEllipse, insideBigEllipse );
 
             if (!insideBigEllipse)
                 continue;
 
-
-            /*
-            GA_Offset ppt;
-            GA_FOR_ALL_GROUP_PTOFF(deformableGridsGdp, pointGrp,ppt)
-            {
-                UT_Vector3 surfacePointPosition = deformableGridsGdp->getPos3(ppt);
-                float distance = distance3d(surfacePointPosition, gridPointPosition);
-                if (distance < r/3)
-                    isCovered = true;
-            }
-            */
             GU_MinInfo mininfo;
             mininfo.init(params.maximumProjectionDistance,0.0001);
             ray.minimumPoint(surfacePointPosition,mininfo);
@@ -1033,7 +1030,8 @@ void DeformableGridsManagerGagnon2019::TestGridsBlendingKernelCoverage(GU_Detail
             UT_Vector4 hitPos;
             mininfo.prim->evaluateInteriorPoint(hitPos,mininfo.u1,mininfo.v1);
             float dist = distance3d(surfacePointPosition,hitPos);
-            if (dist < r/10)
+            // 1/10 of the patch diameters seems a fair gap
+            if (dist < r/5)
             {
                 isCovered = true;
             }
@@ -1247,10 +1245,7 @@ bool DeformableGridsManagerGagnon2019::UVFlattening(GU_Detail &tempGdp, GU_Detai
     }
 
     GA_PrimitiveGroup *primGroup = 0;
-    GA_Range range = (deformableGridsGdp)->getPrimitiveRange((primGroup));
-    GA_Iterator begin = range.begin();
-    GA_Iterator end = range.end();
-    GA_Iterator itTest(range);
+
 
     for (GA_Iterator it((deformableGridsGdp)->getPrimitiveRange(primGroup)); (!it.atEnd() || (prim = nullptr)) &&
             ((prim)=GA_Detail::GB_MACRO_CAST((deformableGridsGdp), (deformableGridsGdp)->getPrimitive(*it)));
@@ -1298,7 +1293,7 @@ bool DeformableGridsManagerGagnon2019::UVFlattening(GU_Detail &tempGdp, GU_Detai
             cout << "There are no uv coordiantes." << endl;
     }
     //----------------- Center UV --------------------
-    UT_Vector3 destCenter(0.5,0.5,0);
+    UT_Vector3 destCenter(0.0,0.0,0);
     if (nbUv != 0)
         uvCenter /= nbUv;
 

@@ -347,23 +347,6 @@ void PatchedSurfaceGagnon2019::AddDeformablePatchesUsingBarycentricCoordinates(G
                     continue;
                 }
 
-//                float u = mininfo.u1;
-//                float v = mininfo.v1;
-
-//                //get pos of hit
-//                UT_Vector4 hitPos;
-//                mininfo.prim->evaluateInteriorPoint(hitPos,mininfo.u1,mininfo.v1);
-//                float dist = distance3d(patchP,hitPos);
-//                if (dist > thresholdDistance)
-//                {
-//                    //we can't project the point on the deformable grid
-//                    int active = attActive.get(ppt);
-//                    if (active == 1)
-//                    {
-//                        cout << "the grid "<< patchNumber<<" no longer covers the blending kernel" <<endl;
-//                        attActive.set(ppt,0);
-//                    }
-//                }
 
                 patchGroup->addOffset(surfacePointOffset);
                 patchIdsAtt->get(patchIdsArrayAttrib,surfacePointOffset, patchArrayData);

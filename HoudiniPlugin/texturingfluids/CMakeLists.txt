@@ -104,7 +104,7 @@ if( DEFINED ENV{OPENCV_DIR} )
     message( STATUS "OpenCV directory: " $ENV{OPENCV_DIR} )
     list( APPEND CMAKE_PREFIX_PATH "$ENV{OPENCV_DIR}/lib" )
 endif()
-find_package( OpenCV REQUIRED PATHS "/Volumes/Projects/Production/packages/tools/opencv/4.1.2/bin")
+find_package( OpenCV REQUIRED PATHS "/Volumes/Projects/Production/packages/tools/opencv/4.1.2.2/bin")
 
 # Link against the libraries
 target_link_libraries( ${library_name} ${OpenCV_LIBS} )
