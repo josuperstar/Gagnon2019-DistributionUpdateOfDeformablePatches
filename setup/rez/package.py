@@ -4,7 +4,7 @@ uuid = "1ff24639-1abb-48b6-b64e-12e7ee8c9a07"
 
 description = "Texturing Fluid with deformable patches based on the paper Distribution Update Of DeformablePatches by Gagnon et al. 2019"
 
-version = "1.0.0"
+version = "1.0.6"
 
 
 authors = [ "Jonathan Gagnon" ]
