@@ -11,16 +11,13 @@ bool DistortionMetricSorkine2002::ComputeDistortion(GU_Detail *trackersGdp, GU_D
     GA_RWHandleV3    attSt(deformableGridsGdp->addFloatTuple(GA_ATTRIB_PRIMITIVE,"St",3));
     GA_RWHandleF    attGMax(deformableGridsGdp->addFloatTuple(GA_ATTRIB_PRIMITIVE,"gmax",1));
     GA_RWHandleF    attGMin(deformableGridsGdp->addFloatTuple(GA_ATTRIB_PRIMITIVE,"gmin",1));
-    GA_RWHandleF    attRefDistortion(deformableGridsGdp->findFloatTuple(GA_ATTRIB_PRIMITIVE,"distortion",1));
+
     GA_RWHandleF    attDt(deformableGridsGdp->addFloatTuple(GA_ATTRIB_PRIMITIVE,"dt",1));
     GA_RWHandleF    attQt(deformableGridsGdp->addFloatTuple(GA_ATTRIB_PRIMITIVE,"Qt",1));
     GA_RWHandleF    attQv(deformableGridsGdp->addFloatTuple(GA_ATTRIB_POINT,"Qv",1));
 
     GA_RWHandleV3   attRP(deformableGridsGdp->findFloatTuple(GA_ATTRIB_VERTEX,"refPosition",3));
 
-    GA_RWHandleI    attId(trackersGdp->addIntTuple(GA_ATTRIB_POINT,"id",1));
-    //GA_RWHandleF    attLife(trackersGdp->findFloatTuple(GA_ATTRIB_POINT,"life",1));
-    GA_RWHandleI    attSpawn(trackersGdp->findIntTuple(GA_ATTRIB_POINT,"spawn",1));
     GA_RWHandleI    attActive(trackersGdp->findIntTuple(GA_ATTRIB_POINT,"active", 1));
     GA_RWHandleF    attMaxQt(trackersGdp->addFloatTuple(GA_ATTRIB_POINT,"maxQt", 1));
 
@@ -116,10 +113,6 @@ bool DistortionMetricSorkine2002::ComputeDistortion(GU_Detail *trackersGdp, GU_D
                 attQt.set(prim->getMapOffset(),Qt);
 
                 //For each grid vertex V , we then compute its quality, QV as the mean of the quality of its incident triangles.
-                //TODO compute Qv:
-
-                //Apparently, this part does not work.
-                //TODO: investigate
 
                 GA_OffsetArray primitives;
                 vector<GA_Offset>::iterator itPoint;
@@ -140,7 +133,6 @@ bool DistortionMetricSorkine2002::ComputeDistortion(GU_Detail *trackersGdp, GU_D
                         }
                     }
                     float Qv = 0;
-                    //cout << "sumQt "<<sumQt<<" nbQt "<<nbQt;
                     if (nbQt > 0)
                     {
                         Qv = sumQt/nbQt;
@@ -153,7 +145,6 @@ bool DistortionMetricSorkine2002::ComputeDistortion(GU_Detail *trackersGdp, GU_D
                         attQv.set(*itPoint, 0);
                     }
                 }
-
 
                 //We kill a particle if, for any vertex in the grid, we have QV < 1/2 (i.e., we keep a margin of quality for the fading-out).
                 float QvMin = params.QvMin;
